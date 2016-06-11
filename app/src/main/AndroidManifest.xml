@@ -38,7 +38,7 @@
         <activity
             android:name=".CountActivity"
             android:label="@string/title_activity_count"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar"/>
     </application>
 
 </manifest>
