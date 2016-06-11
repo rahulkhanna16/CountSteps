@@ -62,7 +62,6 @@ import com.google.android.gms.plus.model.people.Person;
 public class RegisterActivity extends AppCompatActivity implements OnConnectionFailedListener, ConnectionCallbacks, ResultCallback<People.LoadPeopleResult> {
 
     private CallbackManager callbackManager;
-    ProfileTracker profileTracker;
     private FacebookCallback<LoginResult> facebookCallback = new FacebookCallback<LoginResult>() {
         private ProfileTracker mProfileTracker;
 
