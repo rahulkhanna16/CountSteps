@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "589591934022",
+    "project_id": "step-count-1337"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:589591934022:android:334929c5cc022b59",
+        "android_client_info": {
+          "package_name": "com.hatcheryhub.countsteps"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "589591934022-9qgms3ork4tpvblu7j6i8v0aj0rj823o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hatcheryhub.countsteps",
+            "certificate_hash": "93A0F7AA9EDA21D0B5D9D12A0DB137193AC1B1DE"
+          }
+        },
+        {
+          "client_id": "589591934022-h6hmbactbp6evlt3qip9lpjc5iprfq6h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBfRefpkbU8gRRMGGOegLL9M2erQqGohFE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
