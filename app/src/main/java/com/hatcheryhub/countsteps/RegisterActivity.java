@@ -2,7 +2,6 @@ package com.hatcheryhub.countsteps;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.preference.PreferenceManager;
@@ -26,42 +25,42 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
 import com.facebook.Profile;
 import com.facebook.ProfileTracker;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.SignInButton;
-import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.plus.People;
-import com.google.android.gms.plus.model.people.PersonBuffer;
 import com.hatcheryhub.countsteps.helpers.Phantom;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.SignInButton;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.plus.Plus;
-import com.google.android.gms.plus.model.people.Person;
+import com.hatcheryhub.countsteps.models.User;
 
 
-public class RegisterActivity extends AppCompatActivity implements OnConnectionFailedListener, ConnectionCallbacks, ResultCallback<People.LoadPeopleResult> {
+public class RegisterActivity extends AppCompatActivity implements OnConnectionFailedListener {
 
     private CallbackManager callbackManager;
+    private static final String TAG = "SignInActivity";
+    private static final int RC_SIGN_IN = 9001;
+
     private FacebookCallback<LoginResult> facebookCallback = new FacebookCallback<LoginResult>() {
         private ProfileTracker mProfileTracker;
 
@@ -70,16 +69,38 @@ public class RegisterActivity extends AppCompatActivity implements OnConnectionF
             if(Profile.getCurrentProfile() == null) {
                 mProfileTracker = new ProfileTracker() {
                     @Override
-                    protected void onCurrentProfileChanged(Profile profile, Profile profile2) {
-                        // profile2 is the new profile
-                        Toast.makeText(RegisterActivity.this, "Welcome " + profile.getFirstName() + " " + profile.getLastName(), Toast.LENGTH_LONG).show();
-                        Log.v("facebook - profile", profile2.getFirstName());
+                    protected void onCurrentProfileChanged(Profile profile, final Profile profile2) {
+                        Toast.makeText(RegisterActivity.this, "Welcome " + profile2.getFirstName() + " " + profile2.getLastName(), Toast.LENGTH_LONG).show();
                         mProfileTracker.stopTracking();
+                        GraphRequest request = GraphRequest.newMeRequest(
+                                AccessToken.getCurrentAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
+                                    @Override
+                                    public void onCompleted(JSONObject userMe, GraphResponse response) {
+                                        if(userMe!=null){
+                                            //...... do your things
+                                            Log.i("other user details", String.valueOf(userMe) + " " + String.valueOf(response));
+                                            try {
+                                                String email = userMe.getString("email");
+                                                String dob = userMe.getString("birthday");
+                                                int age = calculateAge(userMe.getString("birthday"));                                                String name = profile2.getFirstName() + " " + profile2.getLastName();
+                                                String profilepic = String.valueOf(profile2.getProfilePictureUri(60, 60));
+                                                User.saveUser(new User(name, email, "facebook", dob, profilepic, age));
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    }
+                                });
+
+                        Bundle parameters = new Bundle();
+
+                        parameters.putString("fields","email,birthday");
+                        request.setParameters(parameters);
+
+                        GraphRequest.executeBatchAsync(request);
                     }
                 };
                 mProfileTracker.startTracking();
-                // no need to call startTracking() on mProfileTracker
-                // because it is called by its constructor, internally.
             }
             else {
                 Profile profile = Profile.getCurrentProfile();
@@ -120,34 +141,28 @@ public class RegisterActivity extends AppCompatActivity implements OnConnectionF
     private TextView registerBtn;
     Intent google_data = null;
     Boolean flag = false;
-    final private static int RC_SIGN_IN = 1234;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(this);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_register);
 
 //        Intent i = new Intent(RegisterActivity.this, CountActivity.class);
 //        startActivity(i);
 
         callbackManager = CallbackManager.Factory.create();
         LoginButton loginButton = (LoginButton) findViewById(R.id.facebook_login_button);
+        loginButton.setReadPermissions(Arrays.asList("email", "user_birthday"));
         loginButton.registerCallback(callbackManager, facebookCallback);
-//        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-//                .requestEmail()
-//                .build();
-//        mGoogleApiClient = new GoogleApiClient.Builder(this)
-//                .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
-//                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-//                .build();
-        // Initializing google plus api client
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Plus.API,Plus.PlusOptions.builder().build())
-                .addScope(Plus.SCOPE_PLUS_LOGIN).build();
 
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build();
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .build();
 
         btnSignInGoogle = (SignInButton) findViewById(R.id.google_plus_signin);
         btnSignInGoogle.setOnClickListener(new View.OnClickListener() {
@@ -209,20 +224,43 @@ public class RegisterActivity extends AppCompatActivity implements OnConnectionF
     protected void onResume() {
         super.onResume();
 
-        Profile profile = Profile.getCurrentProfile();
-        if(profile!=null) {
-            Log.i("welcome", profile.getFirstName() + "");
-            Toast.makeText(this, "Welcome " + profile.getFirstName() + " " + profile.getLastName(), Toast.LENGTH_LONG).show();
-        }
         if(Profile.getCurrentProfile() == null) {
             mProfileTracker = new ProfileTracker() {
                 @Override
-                protected void onCurrentProfileChanged(Profile profile, Profile profile2) {
+                protected void onCurrentProfileChanged(Profile profile, final Profile profile2) {
                     // profile2 is the new profile
                     mProfileTracker.stopTracking();
-                    Toast.makeText(RegisterActivity.this, "Welcome " + profile.getFirstName() + " " + profile.getLastName(), Toast.LENGTH_LONG).show();
-                    Log.v("facebook - profile", profile2.getFirstName());
+                    Toast.makeText(RegisterActivity.this, "Welcome " + profile2.getFirstName() + " " + profile2.getLastName(), Toast.LENGTH_LONG).show();
+                    Log.v("facebook - profile", profile2.getFirstName() + " " + String.valueOf(profile2.getProfilePictureUri(60, 60)));
+//                    User.saveUser(profile2.getFirstName() + " " + profile2.getLastName(), profile2.getProfilePictureUri(60, 60).toString(), );
+                    GraphRequest request = GraphRequest.newMeRequest(
+                            AccessToken.getCurrentAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
+                                @Override
+                                public void onCompleted(JSONObject userMe, GraphResponse response) {
+                                    if(userMe!=null){
+                                        //...... do your things
+                                        Log.i("other user details", String.valueOf(userMe) + " " + String.valueOf(response));
+                                        try {
+                                            String email = userMe.getString("email");
+                                            String dob = userMe.getString("birthday");
+                                            int age = calculateAge(userMe.getString("birthday"));
+                                            String name = profile2.getFirstName() + " " + profile2.getLastName();
+                                            String profilepic = String.valueOf(profile2.getProfilePictureUri(60, 60));
+                                            User.saveUser(new User(name, email, "facebook", dob, profilepic, age));
+                                        } catch (JSONException e) {
+                                            e.printStackTrace();
+                                        }
 
+                                    }
+                                }
+                            });
+
+                    Bundle parameters = new Bundle();
+
+                    parameters.putString("fields","email,birthday");
+                    request.setParameters(parameters);
+
+                    GraphRequest.executeBatchAsync(request);
                 }
             };
             mProfileTracker.startTracking();
@@ -237,8 +275,6 @@ public class RegisterActivity extends AppCompatActivity implements OnConnectionF
 
         }
 
-        if(mGoogleApiClient.isConnected())
-            mGoogleApiClient.connect();
 
     }
 
@@ -249,17 +285,11 @@ public class RegisterActivity extends AppCompatActivity implements OnConnectionF
             return;
         }
 
-        if (requestCode == 0) {
-            if (resultCode != RESULT_OK) {
-                mSignInClicked = false;
-            }
-            mIntentInProgress = false;
-
-            Toast.makeText(this, "onActivityResult: " + resultCode + " " + data.toString(), Toast.LENGTH_LONG).show();
-
-            if (!mGoogleApiClient.isConnecting()) {
+        if (requestCode == RC_SIGN_IN) {
+            if(!mGoogleApiClient.isConnecting()||!mGoogleApiClient.isConnected())
                 mGoogleApiClient.connect();
-            }
+            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            handleSignInResult(result);
         }
     }
 
@@ -390,7 +420,6 @@ public class RegisterActivity extends AppCompatActivity implements OnConnectionF
 
     protected void onStart() {
         super.onStart();
-        mGoogleApiClient.connect();
     }
 
     protected void onStop() {
@@ -401,88 +430,79 @@ public class RegisterActivity extends AppCompatActivity implements OnConnectionF
     }
 
     private void signInWithGplus() {
-        if (!mGoogleApiClient.isConnecting()) {
-            mSignInClicked = true;
-            resolveSignInError();
-        }
-    }
-
-    /**
-     * Method to resolve any signin errors
-     * */
-
-    private void resolveSignInError() {
-        if (mConnectionResult.hasResolution()) {
-            try {
-                mIntentInProgress = true;
-                mConnectionResult.startResolutionForResult(this, 0);
-            } catch (IntentSender.SendIntentException e) {
-                mIntentInProgress = false;
-                mGoogleApiClient.connect();
-            }
-        }
+        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+        startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 
     @Override
-    public void onConnected(Bundle arg0) {
-        mSignInClicked = false;
-        Toast.makeText(this, "User is connected!", Toast.LENGTH_LONG).show();
-        Plus.PeopleApi.loadVisible(mGoogleApiClient, null)
-                .setResultCallback(this);
+    public void onConnectionFailed(ConnectionResult connectionResult) {
 
+        Log.d(TAG, "onConnectionFailed:" + connectionResult);
+        Toast.makeText(this, "onConnectionFailed:" + connectionResult, Toast.LENGTH_LONG).show();
     }
 
-    @Override
-    public void onConnectionSuspended(int arg0) {
-
-        Toast.makeText(this, "connection suspended!", Toast.LENGTH_SHORT).show();
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult result) {
-
-        Toast.makeText(this, "Connection failed", Toast.LENGTH_SHORT).show();
-        if (!result.hasResolution()) {
-            GooglePlayServicesUtil.getErrorDialog(result.getErrorCode(), this,
-                    0).show();
-            return;
-        }
-
-        if (!mIntentInProgress) {
-            // Store the ConnectionResult for later usage
-            mConnectionResult = result;
-
-            if (mSignInClicked) {
-                // The user has already clicked 'sign-in' so we attempt to
-                // resolve all
-                // errors until the user is signed in, or they cancel.
-                resolveSignInError();
-            }
-        }
-
-    }
-
-    @Override
-    public void onResult(People.LoadPeopleResult peopleData) {
-        Log.i("onResult", " " + peopleData.toString());
-        if (peopleData.getStatus().getStatusCode() == CommonStatusCodes.SUCCESS) {
-            PersonBuffer personBuffer = peopleData.getPersonBuffer();
-            try {
-                int count = personBuffer.getCount();
-                Toast.makeText(this, "Display name: " + personBuffer.get(0).getDisplayName(), Toast.LENGTH_SHORT).show();
-                for (int i = 0; i < count; i++) {
-                    Log.d("onResult", "Display name: " + personBuffer.get(i).getDisplayName());
-                    Toast.makeText(this, "Display name: " + personBuffer.get(i).getDisplayName(), Toast.LENGTH_SHORT).show();
-                }
-            } finally {
-                personBuffer.release();
-            }
+    private void handleSignInResult(GoogleSignInResult result) {
+        Log.d(TAG, "handleSignInResult:" + result.isSuccess());
+        if (result.isSuccess()) {
+            // Signed in successfully, show authenticated UI.
+            GoogleSignInAccount acct = result.getSignInAccount();
+//            mStatusTextView.setText(getString(R.string.signed_in_fmt, acct.getDisplayName()));
+//            updateUI(true);
+            Toast.makeText(this, "Welcome " + acct.getDisplayName(), Toast.LENGTH_SHORT).show();
+            String name = acct.getDisplayName();
+            String email = acct.getEmail();
+            String profile_pic = acct.getPhotoUrl().toString();
+            int age = 21;
+            User.saveUser(new User(name, email, "google", "null",profile_pic, age));
         } else {
-            Log.e("onResult", "Error requesting visible circles: " + peopleData.getStatus());
+            // Signed out, show unauthenticated UI.
+//            updateUI(false);
+            Toast.makeText(this, "Could not authenticate!", Toast.LENGTH_SHORT).show();
         }
     }
 
+    private void showProgressDialog() {
+        if (mProgressDialog == null) {
+            mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setMessage("Loading..");
+            mProgressDialog.setIndeterminate(true);
+        }
+
+        mProgressDialog.show();
+    }
+
+    private void hideProgressDialog() {
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            mProgressDialog.hide();
+        }
+    }
+
+    private int calculateAge(String dob) {
+
+        if(dob == null) {
+            return 0;
+        }
+        Calendar c = Calendar.getInstance();
+        System.out.println("Current time => " + c.getTime());
+
+        SimpleDateFormat df = new SimpleDateFormat("MM/dd/yyyy");
+        String curr_date = df.format(c.getTime());
+
+        Log.i("curr_date - birth_date", curr_date + " - " + dob);
+
+        int curr_year = Integer.parseInt(curr_date.split("/")[2]);
+        int birth_year = Integer.parseInt(dob.split("/")[2]);
+        int age = curr_year - birth_year;
+
+        if(Integer.parseInt(curr_date.split("/")[0])<Integer.parseInt(dob.split("/")[0]))
+            age = age-1;
+        else if(Integer.parseInt(curr_date.split("/")[1])<Integer.parseInt(dob.split("/")[1]))
+            age = age-1;
+
+        Log.i("age", age +"");
+        return age;
+
+    }
 }
 
 //589591934022-9qgms3ork4tpvblu7j6i8v0aj0rj823o.apps.googleusercontent.com
