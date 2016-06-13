@@ -1,11 +1,9 @@
 package com.hatcheryhub.countsteps;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
-import android.preference.PreferenceManager;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,11 +12,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.CallbackManager;
@@ -40,15 +33,12 @@ import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.hatcheryhub.countsteps.helpers.Phantom;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
 
 
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
@@ -85,6 +75,15 @@ public class RegisterActivity extends AppCompatActivity implements OnConnectionF
                                                 int age = calculateAge(userMe.getString("birthday"));                                                String name = profile2.getFirstName() + " " + profile2.getLastName();
                                                 String profilepic = String.valueOf(profile2.getProfilePictureUri(60, 60));
                                                 User.saveUser(new User(name, email, "facebook", dob, profilepic, age));
+                                                changeLoginStatus();
+
+                                                Intent i = new Intent(RegisterActivity.this, HeightWeightActivity.class);
+                                                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                                                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                                startActivity(i);
+                                                finish();
                                             } catch (JSONException e) {
                                                 e.printStackTrace();
                                             }
@@ -125,8 +124,6 @@ public class RegisterActivity extends AppCompatActivity implements OnConnectionF
     private ProfileTracker mProfileTracker;
     private AccessTokenTracker accessTokenTracker;
 
-    private String email, name, age, password;
-
     private EditText et_name, et_age, et_email, et_password, et_confirm;
 
     GoogleApiClient mGoogleApiClient;
@@ -147,6 +144,16 @@ public class RegisterActivity extends AppCompatActivity implements OnConnectionF
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(this);
         setContentView(R.layout.activity_register);
+
+
+        SharedPreferences sharedPref = Phantom.getInstance().getSharedPreferences(Phantom.getMyPrefs(), Context.MODE_PRIVATE);
+        int login = sharedPref.getInt("loginstatus", 0);
+        if(login == 1) {
+            Intent i = new Intent(RegisterActivity.this, CountActivity.class);
+            i.putExtra("isfirst", "false");
+            startActivity(i);
+            finish();
+        }
 
 //        Intent i = new Intent(RegisterActivity.this, CountActivity.class);
 //        startActivity(i);
@@ -183,37 +190,76 @@ public class RegisterActivity extends AppCompatActivity implements OnConnectionF
         registerBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                email = et_email.getText().toString().trim();
-                password = et_password.getText().toString();
-                name = et_name.getText().toString();
-                age = et_age.getText().toString();
+                showProgressDialog();
+                String email = et_email.getText().toString().trim();
+                String password = et_password.getText().toString();
+                String confirm_password = et_confirm.getText().toString();
+                String name = et_name.getText().toString();
+                int age = 0;
+                boolean error = false;
+                try {
+                    age = Integer.parseInt(et_age.getText().toString());
+                }catch(NumberFormatException e) {
+                    error = true;
+                    et_age.setError("Enter valid age!");
+                }
 
-
-                Log.i("initiate", "register");
-                register();
                 if (email.isEmpty()) {
                     et_email.setError("Email is required!");
+                    error = true;
                     return;
                 }
 
                 if (name.isEmpty()) {
                     et_name.setError("Name is required!");
+                    error = true;
                     return;
-                }
-
-                if (age.isEmpty()) {
-                    et_age.setError("Age is required!");
                 }
 
                 if (password.isEmpty()) {
                     et_password.setError("Password is required!");
+                    error = true;
                 }
-                else if(!et_confirm.getText().toString().isEmpty()) {
-                    if (!et_confirm.getText().toString().equals(password)) {
+
+                if (confirm_password.isEmpty()) {
+                    et_password.setError("Password is required!");
+                    error = true;
+                }
+
+                else if(!error) {
+                    if (age == 0) {
+                        et_age.setError("Age is required!");
+                        error = true;
+                    }
+                }
+
+                if(!error) {
+                    if (!confirm_password.equals(password)) {
                         et_password.setError("Confirm password!!");
                         et_confirm.setText("");
                     }
+                    else {
+                        User.saveUser(new User(name, email, "server", "null", "", age));
+
+                        SharedPreferences sharedPref = Phantom.getInstance().getSharedPreferences(Phantom.getMyPrefs(), Context.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sharedPref.edit();
+                        editor.putString(Phantom.getInstance().getString(R.string.user_password), password);
+                        editor.commit();
+
+                        changeLoginStatus();
+
+                        hideProgressDialog();
+
+                        Intent i = new Intent(RegisterActivity.this, LoginActivity.class);
+                        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(i);
+                        finish();
+                    }
                 }
+                hideProgressDialog();
             }
         });
 
@@ -247,6 +293,14 @@ public class RegisterActivity extends AppCompatActivity implements OnConnectionF
                                             String name = profile2.getFirstName() + " " + profile2.getLastName();
                                             String profilepic = String.valueOf(profile2.getProfilePictureUri(60, 60));
                                             User.saveUser(new User(name, email, "facebook", dob, profilepic, age));
+                                            changeLoginStatus();
+                                            Intent i = new Intent(RegisterActivity.this, HeightWeightActivity.class);
+                                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                                            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                            startActivity(i);
+                                            finish();
                                         } catch (JSONException e) {
                                             e.printStackTrace();
                                         }
@@ -293,130 +347,130 @@ public class RegisterActivity extends AppCompatActivity implements OnConnectionF
         }
     }
 
-
-    private void register() {
-
-
-//        progressDialogToggle(true);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-
-                Log.i("entered", "register");
-
-                JSONObject jsonObject = new JSONObject();
-                JSONArray jsonArray = new JSONArray();
-
-                try {
-                    jsonObject.put("username", email);
-                    jsonObject.put("password", password);
-                    jsonObject.put("name", name);
-                    jsonObject.put("age", age);
-
-                    jsonArray.put(jsonObject);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-
-                final JSONObject postJsonObject = jsonObject;
-
-
-                String url = Phantom.getBaseURL() + "/Register.php";
-                String uri = Uri.parse(url)
-                        .buildUpon()
-                        .build().toString();
-
-                // Request a string response from the provided URL.
-
-                StringRequest stringRequest = new StringRequest(Request.Method.POST, uri,
-                        new Response.Listener<String>() {
-                            @Override
-                            public void onResponse(String response) {
-                                // Display the first 500 characters of the response string.
-                                Log.i("[#]RESPONSE STATUS", "OK");
-                                Log.i("[#]RESPONSE", response);
-
-                                String id, username, register, profile_pic; //email is already entered by user
-                                boolean error_status = true;
-
-                                try {
-                                    JSONObject res = new JSONObject(response);
-                                    error_status = res.getBoolean("error");
-
-                                    if (!error_status) {
-                                        Log.i("Success", "registered");
-
-                                    }
-                                } catch (JSONException e) {
-                                    error_status = true;
-                                    e.printStackTrace();
-                                }
-
-                                if (!error_status) {
-                                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                                    if (sharedPreferences.getInt("loginstatus", 0) != 1) {
-                                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                                        editor.putString("email", email);
-                                        editor.putString("password", password);
-                                        editor.putString("name", name);
-                                        editor.putString("age", age);
-                                        editor.putInt("loginstatus", 1);
-                                        editor.commit();
-                                    }
-//                                    loginNavigation();
-                                }
-
-//                                progressDialogToggle(false);
-
-                            }
-                        }, new Response.ErrorListener() {
-
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.i("[#]ERROR RESPONSE", String.valueOf(error));
-//                        progressDialogToggle(false);
-
-                        int error_code;
-
-                        try {
-                            error_code = error.networkResponse.statusCode;
-                        } catch (Exception e) {
-                            error_code = -1;
-                        }
-
-                        if (error_code == 400) {
-                            Snackbar.make(findViewById(android.R.id.content), "Invalid Email or Password.", Snackbar.LENGTH_LONG)
-                                    .show();
-                        } else {
-                            Snackbar.make(findViewById(android.R.id.content), "Please check your internet connection.", Snackbar.LENGTH_LONG)
-                                    .show();
-                        }
-                    }
-                }) {
-                    protected Map<String, String> getParams() throws com.android.volley.AuthFailureError {
-                        Map<String, String> params = new HashMap<String, String>();
-                        params.put("email", email);
-                        params.put("password", password);
-                        return params;
-                    }
-
-                    @Override
-                    public Map<String, String> getHeaders() throws AuthFailureError {
-                        Map<String, String> params = new HashMap<String, String>();
-                        params.put("Content-Type", "application/x-www-form-urlencoded");
-                        params.put("json", postJsonObject.toString());
-                        return params;
-                    }
-                };
-                // Add the request to the RequestQueue.
-                Log.i("check it", stringRequest.toString());
-                Phantom.getVolleyRequestQueue().add(stringRequest);
-
-            }
-        });
-
-    }
+//
+//    private void register() {
+//
+//
+////        progressDialogToggle(true);
+//        runOnUiThread(new Runnable() {
+//            @Override
+//            public void run() {
+//
+//                Log.i("entered", "register");
+//
+//                JSONObject jsonObject = new JSONObject();
+//                JSONArray jsonArray = new JSONArray();
+////
+////                try {
+////                    jsonObject.put("username", email);
+////                    jsonObject.put("password", password);
+////                    jsonObject.put("name", name);
+////                    jsonObject.put("age", age);
+////
+////                    jsonArray.put(jsonObject);
+////                } catch (JSONException e) {
+////                    e.printStackTrace();
+////                }
+//
+//
+//                final JSONObject postJsonObject = jsonObject;
+//
+//
+//                String url = Phantom.getBaseURL() + "/Register.php";
+//                String uri = Uri.parse(url)
+//                        .buildUpon()
+//                        .build().toString();
+//
+//                // Request a string response from the provided URL.
+//
+//                StringRequest stringRequest = new StringRequest(Request.Method.POST, uri,
+//                        new Response.Listener<String>() {
+//                            @Override
+//                            public void onResponse(String response) {
+//                                // Display the first 500 characters of the response string.
+//                                Log.i("[#]RESPONSE STATUS", "OK");
+//                                Log.i("[#]RESPONSE", response);
+//
+//                                String id, username, register, profile_pic; //email is already entered by user
+//                                boolean error_status = true;
+//
+//                                try {
+//                                    JSONObject res = new JSONObject(response);
+//                                    error_status = res.getBoolean("error");
+//
+//                                    if (!error_status) {
+//                                        Log.i("Success", "registered");
+//
+//                                    }
+//                                } catch (JSONException e) {
+//                                    error_status = true;
+//                                    e.printStackTrace();
+//                                }
+//
+//                                if (!error_status) {
+//                                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+//                                    if (sharedPreferences.getInt("loginstatus", 0) != 1) {
+//                                        SharedPreferences.Editor editor = sharedPreferences.edit();
+//                                        editor.putString("email", email);
+//                                        editor.putString("password", password);
+//                                        editor.putString("name", name);
+//                                        editor.putString("age", age);
+//                                        editor.putInt("loginstatus", 1);
+//                                        editor.commit();
+//                                    }
+////                                    loginNavigation();
+//                                }
+//
+////                                progressDialogToggle(false);
+//
+//                            }
+//                        }, new Response.ErrorListener() {
+//
+//                    @Override
+//                    public void onErrorResponse(VolleyError error) {
+//                        Log.i("[#]ERROR RESPONSE", String.valueOf(error));
+////                        progressDialogToggle(false);
+//
+//                        int error_code;
+//
+//                        try {
+//                            error_code = error.networkResponse.statusCode;
+//                        } catch (Exception e) {
+//                            error_code = -1;
+//                        }
+//
+//                        if (error_code == 400) {
+//                            Snackbar.make(findViewById(android.R.id.content), "Invalid Email or Password.", Snackbar.LENGTH_LONG)
+//                                    .show();
+//                        } else {
+//                            Snackbar.make(findViewById(android.R.id.content), "Please check your internet connection.", Snackbar.LENGTH_LONG)
+//                                    .show();
+//                        }
+//                    }
+//                }) {
+//                    protected Map<String, String> getParams() throws com.android.volley.AuthFailureError {
+//                        Map<String, String> params = new HashMap<String, String>();
+//                        params.put("email", email);
+//                        params.put("password", password);
+//                        return params;
+//                    }
+//
+//                    @Override
+//                    public Map<String, String> getHeaders() throws AuthFailureError {
+//                        Map<String, String> params = new HashMap<String, String>();
+//                        params.put("Content-Type", "application/x-www-form-urlencoded");
+//                        params.put("json", postJsonObject.toString());
+//                        return params;
+//                    }
+//                };
+//                // Add the request to the RequestQueue.
+//                Log.i("check it", stringRequest.toString());
+//                Phantom.getVolleyRequestQueue().add(stringRequest);
+//
+//            }
+//        });
+//
+//    }
 
     protected void onStart() {
         super.onStart();
@@ -454,6 +508,15 @@ public class RegisterActivity extends AppCompatActivity implements OnConnectionF
             String profile_pic = acct.getPhotoUrl().toString();
             int age = 21;
             User.saveUser(new User(name, email, "google", "null",profile_pic, age));
+            changeLoginStatus();
+
+            Intent i = new Intent(RegisterActivity.this, HeightWeightActivity.class);
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(i);
+            finish();
         } else {
             // Signed out, show unauthenticated UI.
 //            updateUI(false);
@@ -477,13 +540,21 @@ public class RegisterActivity extends AppCompatActivity implements OnConnectionF
         }
     }
 
+    private void changeLoginStatus() {
+
+        SharedPreferences sharedPref = Phantom.getInstance().getSharedPreferences(Phantom.getMyPrefs(), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+
+        editor.putInt("loginstatus", 1);
+        editor.commit();
+    }
+
     private int calculateAge(String dob) {
 
         if(dob == null) {
             return 0;
         }
         Calendar c = Calendar.getInstance();
-        System.out.println("Current time => " + c.getTime());
 
         SimpleDateFormat df = new SimpleDateFormat("MM/dd/yyyy");
         String curr_date = df.format(c.getTime());

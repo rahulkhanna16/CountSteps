@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Step Counter</string>
+    <string name="app_name">Step Tracker</string>
     <string name="facebook_app_id">289081564759529</string>
 
     <!-- TODO: Remove or change this placeholder text -->
@@ -11,6 +11,9 @@
     <string name="user_dob">dateofbirth</string>
     <string name="user_logintype">logintype</string>
     <string name="user_email">email</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="user_password">password</string>
+    <string name="curr_date">current_date</string>
 
 
 </resources>

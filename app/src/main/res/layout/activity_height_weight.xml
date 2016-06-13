@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:background="#FAFDFF"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="vertical"
+        android:padding="10dp"
+        android:layout_marginBottom="40dp"
+        android:layout_gravity="center">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Height :"
+                android:id="@+id/textView14"
+                android:layout_gravity="center_vertical"
+                android:textSize="20dp"
+                android:textColor="@color/colorPrimary" />
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:weightSum="2"
+                android:layout_marginLeft="10dp">
+
+                <EditText
+                    android:id="@+id/height_feet"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:background="@drawable/edittext_top_bg"
+                    android:drawablePadding="5dp"
+                    android:inputType="number"
+                    android:ems="10"
+                    android:hint="feet"
+                    android:layout_marginRight="1dp"
+                    android:padding="10dp"
+                    android:textColorHint="#cccccc"
+                    android:layout_weight="1"
+                    android:layout_gravity="center_vertical" />
+
+                <EditText
+                    android:id="@+id/height_inches"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:background="@drawable/edittext_top_bg"
+                    android:drawablePadding="5dp"
+                    android:inputType="number"
+                    android:ems="10"
+                    android:layout_marginLeft="1dp"
+                    android:hint="inches"
+                    android:padding="10dp"
+                    android:textColorHint="#cccccc"
+                    android:layout_weight="1"
+                    android:layout_gravity="center_vertical" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="30dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Weight :"
+                android:id="@+id/textView13"
+                android:layout_gravity="center_vertical"
+                android:textSize="20dp"
+                android:textColor="@color/colorPrimary" />
+
+            <EditText
+                android:id="@+id/weight_kg"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="-2dp"
+                android:background="@drawable/edittext_bottom_bg"
+                android:drawablePadding="5dp"
+                android:inputType="number"
+                android:ems="10"
+                android:hint="kg"
+                android:padding="10dp"
+                android:textColorHint="#cccccc"
+                android:layout_marginLeft="10dp"
+                android:layout_gravity="center_vertical" />
+
+        </LinearLayout>
+
+        <Button
+            style="@style/Base.Widget.AppCompat.Button.Borderless"
+            android:id="@+id/proceed_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="4dp"
+            android:background="@color/colorPrimary"
+            android:padding="10dp"
+            android:text="Proceed"
+            android:textColor="@android:color/white" />
+
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Enter your height and weight..."
+        android:id="@+id/textView15"
+        android:layout_gravity="left|top"
+        android:layout_marginTop="40dp"
+        android:layout_marginLeft="20dp"
+        android:textColor="@color/colorPrimaryDark" />
+</FrameLayout>

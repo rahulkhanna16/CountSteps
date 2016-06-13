@@ -21,7 +21,7 @@
             android:value="@string/facebook_app_id" />
         <meta-data
             android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version"/>
+            android:value="@integer/google_play_services_version" />
 
         <activity android:name=".RegisterActivity">
             <intent-filter>
@@ -38,7 +38,17 @@
         <activity
             android:name=".CountActivity"
             android:label="@string/title_activity_count"
-            android:theme="@style/AppTheme.NoActionBar"/>
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".HeightWeightActivity"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
+
+        <activity
+            android:name=".LoginActivity"
+            android:label="Login Page"
+            android:theme="@style/AppTheme">
+        </activity>
     </application>
 
 </manifest>

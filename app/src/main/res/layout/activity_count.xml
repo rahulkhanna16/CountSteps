@@ -1,24 +1,175 @@
-<LinearLayout
+<FrameLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:padding="16dp"
-    android:gravity="center_vertical|center_horizontal">
+    android:background="@color/accent">
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_marginTop="1dp"
+        android:background="@android:color/darker_gray" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingBottom="10dp"
+        android:paddingTop="10dp"
+        android:text="STEP TRACKER"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="35dp"
+        android:textStyle="bold"
+        android:id="@+id/post_tv" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_marginTop="60dp"
+        android:background="@android:color/darker_gray" />
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
+        android:gravity="center_vertical|center_horizontal"
+        android:background="@drawable/circle_background"
+        android:layout_gravity="center_horizontal"
+        android:id="@+id/ll">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Step Counts"
+            android:id="@+id/textView"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="0"
+            android:id="@+id/tv_count"
+            android:textColor="@color/red"
+            android:textSize="72dp"
+            android:layout_gravity="center" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Target: 10000"
+            android:id="@+id/textView2"
+            android:textSize="16dp" />
+
+    </LinearLayout>
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/play_pause"
+        android:src="@drawable/pause_button"
+        android:background="@drawable/circle_small"
+        android:layout_gravity="right"
+        android:layout_marginRight="50dp"
+        android:layout_marginTop="80dp" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:src="@drawable/profile64" />
+
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="100dp"
+        android:weightSum="2">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Miles"
+                android:id="@+id/textView7"
+                android:layout_gravity="center_horizontal"
+                android:textSize="20dp"
+                android:textColor="#000000"
+                android:layout_marginBottom="10dp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0.0"
+                android:id="@+id/mile_tv"
+                android:layout_gravity="center_horizontal"
+                android:textSize="30dp"
+                android:textColor="#13b0e4" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Calories"
+                android:id="@+id/textView8"
+                android:layout_gravity="center_horizontal"
+                android:textSize="20dp"
+                android:textColor="#000000"
+                android:layout_marginBottom="10dp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:id="@+id/calories_tv"
+                android:layout_gravity="center_horizontal"
+                android:textSize="30dp"
+                android:textColor="@color/green" />
+        </LinearLayout>
+    </LinearLayout>
+
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="60dp"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="190dp"
+        android:background="@android:color/darker_gray" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="60dp"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="80dp"
+        android:background="@android:color/darker_gray" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="220dp"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="0"
-        android:id="@+id/tv_count"
-        android:textColor="#ff0000"
-        android:textSize="72dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Step Counts"
-        android:id="@+id/textView" />
-</LinearLayout>
+        android:text="Large Text"
+        android:id="@+id/date_tv"
+        android:layout_gravity="bottom|center_horizontal" />
+</FrameLayout>
